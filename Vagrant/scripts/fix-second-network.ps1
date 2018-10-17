@@ -18,6 +18,13 @@ if (!$name) {
      | Where-Object -FilterScript { ($_.IPAddress).StartsWith("169.254.") } `
      ).InterfaceAlias
 }
+# ESXi gives the second adapter standard DHCP, so the IP Address matches the first adapter, and doesn't
+# match the previous two patterns, so grab the adapater that's not the first, or loopback
+if (!$name) {
+  $name = (Get-NetIPAddress -AddressFamily IPv4 `
+     | Where-Object -FilterScript { ($_.InterfaceAlias -notlike "Loopback*") -and ($_.InterfaceAlias -ne "Ethernet0") } `
+     ).InterfaceAlias
+}
 if ($name) {
   Write-Host "Set IP address to $ip of interface $name"
   & netsh.exe int ip set address "$name" static $ip 255.255.255.0 "$subnet.1"

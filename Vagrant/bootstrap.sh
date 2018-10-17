@@ -12,6 +12,20 @@ apt_install_prerequisites() {
   apt-get install -y jq whois build-essential git docker docker-compose unzip mongodb-org
 }
 
+add_eth1_esxi() {
+	if (cat /etc/network/interfaces | grep eth1) then
+		echo "eth1 is already configured!"
+	else
+		echo "auto eth1" >> /etc/network/interfaces
+		echo "iface eth1 inet static" >> /etc/network/interfaces
+		echo "address 192.168.38.105" >> /etc/network/interfaces
+		echo "netmask 255.255.255.0" >> /etc/network/interfaces
+		echo "gateway 192.168.38.1" >> /etc/network/interfaces
+		echo "dns-nameservers 8.8.8.8 192.168.38.102" >> /etc/network/interfaces
+		ifup eth1
+	fi
+}
+
 fix_eth1_static_ip() {
   # There's a fun issue where dhclient keeps messing with eth1 despite the fact
   # that eth1 has a static IP set. We workaround this by setting a static DHCP lease.
@@ -372,6 +386,7 @@ install_suricata() {
 main() {
   install_mongo_db_apt_key
   apt_install_prerequisites
+	add_eth1_esxi
   fix_eth1_static_ip
   install_python
   install_golang
